@@ -162,3 +162,25 @@ public inline fun <A, B, C> Result<A, B>.then(f: (B) -> Result<A, C>): Result<A,
 public fun <A> A.failure(): Result<A, Nothing> = Result.Failure(this)
 
 public fun <A> A.success(): Result<Nothing, A> = Result.Success(this)
+
+/**
+ * Applies the given function `f` if this is a [Result.Failure], otherwise returns this if this is a [Result.Success].
+ * This is like `then` for the exception.
+ */
+public inline fun <A, B, C> Result<A, B>.handleErrorWith(f: (A) -> Result<C, B>): Result<C, B> =
+  when (this) {
+    is Result.Failure -> f(this.value)
+    is Result.Success -> this
+  }
+
+public inline fun <A, B> Result<A, B>.handleError(f: (A) -> B): Result<A, B> =
+  when (this) {
+    is Result.Failure -> f(value).success()
+    is Result.Success -> this
+  }
+
+public inline fun <A, B> Result<A, B>.ensure(error: () -> A, predicate: (B) -> Boolean): Result<A, B> =
+  when (this) {
+    is Result.Success -> if (predicate(this.value)) this else error().failure()
+    is Result.Failure -> this
+  }
