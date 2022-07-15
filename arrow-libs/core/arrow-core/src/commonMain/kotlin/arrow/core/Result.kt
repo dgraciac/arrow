@@ -85,6 +85,58 @@ public sealed class Result<out A, out B> {
    */
   public inline fun <C> mapFailure(f: (A) -> C): Result<C, B> = fold({ Failure(f(it)) }, { Success(it) })
 
+  /**
+   * The given function is applied as a fire and forget effect
+   * if this is a [Failure].
+   * When applied the result is ignored and the original
+   * Result value is returned
+   *
+   * Example:
+   * ```kotlin
+   * import arrow.core.*
+   *
+   * fun main() {
+   *   Result.Success(12).tapFailure { println("flower") } // Result: Success(12)
+   *   Result.Failure(12).tapFailure { println("flower") }  // Result: prints "flower" and returns: Failure(12)
+   * }
+   * ```
+   * <!--- KNIT example-either-38.kt -->
+   */
+  public inline fun tapFailure(f: (A) -> Unit): Result<A, B> =
+    when (this) {
+      is Failure -> {
+        f(this.value)
+        this
+      }
+      is Success -> this
+    }
+
+  /**
+   * The given function is applied as a fire and forget effect
+   * if this is a [Success].
+   * When applied the result is ignored and the original
+   * Result value is returned
+   *
+   * Example:
+   * ```kotlin
+   *  import arrow.core.*
+   *
+   * fun main() {
+   *   Result.Success(12).tapSuccess { println("flower") } // Result: prints "flower" and returns: Success(12)
+   *   Result.Failure(12).tapSuccess { println("flower") }  // Result: Failure(12)
+   * }
+   * ```
+   * <!--- KNIT example-either-39.kt -->
+   */
+  public inline fun tapSuccess(f: (B) -> Unit): Result<A, B> =
+    when (this) {
+      is Failure -> this
+      is Success -> {
+        f(this.value)
+        this
+      }
+    }
+
   public data class Success<out B> constructor(val value: B) : Result<Nothing, B>() {
     override val isFailure = false
     override val isSuccess = true
@@ -94,6 +146,11 @@ public sealed class Result<out A, out B> {
     override val isFailure = true
     override val isSuccess = false
   }
+
+  override fun toString(): String = fold(
+    { "Result.Failure($it)" },
+    { "Result.Success($it)" }
+  )
 }
 
 public inline fun <A, B, C> Result<A, B>.then(f: (B) -> Result<A, C>): Result<A, C> =
@@ -101,3 +158,7 @@ public inline fun <A, B, C> Result<A, B>.then(f: (B) -> Result<A, C>): Result<A,
     is Result.Failure -> this
     is Result.Success -> f(this.value)
   }
+
+public fun <A> A.failure(): Result<A, Nothing> = Result.Failure(this)
+
+public fun <A> A.success(): Result<Nothing, A> = Result.Success(this)
