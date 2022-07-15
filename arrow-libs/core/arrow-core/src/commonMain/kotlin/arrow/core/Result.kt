@@ -9,22 +9,8 @@ public sealed class Result<out A, out B> {
   public data class Failure<out A> constructor(val value: A) : Result<A, Nothing>()
 }
 
-public inline fun <A, B, C> Result<A, B>.then(f: (B) -> Result<A, C>): Result<A, C> {
-
-  val either = when (this) {
-    is Result.Failure -> Either.Left(this.value)
-    is Result.Success -> Either.Right(this.value)
-  }
-
-  val flatMap = either.flatMap { value: B ->
-    f(value).let { result: Result<A, C> -> when() }
-  }
-  when(flatMap) {
-
-  }
-
-  return when (this) {
+public inline fun <A, B, C> Result<A, B>.then(f: (B) -> Result<A, C>): Result<A, C> =
+  when (this) {
     is Result.Failure -> this
     is Result.Success -> f(this.value)
   }
-}
