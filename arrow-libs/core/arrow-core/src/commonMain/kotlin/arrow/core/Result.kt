@@ -53,6 +53,38 @@ public sealed class Result<out A, out B> {
       is Success -> ifSuccess(value)
     }
 
+  /**
+   * The given function is applied if this is a [Success].
+   *
+   * Example:
+   * ```kotlin
+   * import arrow.core.*
+   *
+   * fun main() {
+   *   Result.Success(12).mapSuccess { "flower" } // Result: Success("flower")
+   *   Result.Failure(12).mapSuccess { "flower" }  // Result: Failure(12)
+   * }
+   * ```
+   * <!--- KNIT example-either-36.kt -->
+   */
+  public inline fun <C> mapSuccess(f: (B) -> C): Result<A, C> = fold({ Failure(it) }, { Success(f(it)) })
+
+  /**
+   * The given function is applied if this is a [Failure].
+   *
+   * Example:
+   * ```kotlin
+   * import arrow.core.*
+   *
+   * fun main() {
+   *  Result.Success(12).mapFailure { "flower" } // Result: Success(12)
+   *  Result.Failure(12).mapFailure { "flower" }  // Result: Failure("flower")
+   * }
+   * ```
+   * <!--- KNIT example-either-37.kt -->
+   */
+  public inline fun <C> mapFailure(f: (A) -> C): Result<C, B> = fold({ Failure(f(it)) }, { Success(it) })
+
   public data class Success<out B> constructor(val value: B) : Result<Nothing, B>() {
     override val isFailure = false
     override val isSuccess = true
